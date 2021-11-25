@@ -51,6 +51,10 @@ export class MyElement extends LitElement {
         justify-content: center;
         align-items: center;
       }
+
+      .apple {
+        background:green;
+      }
     `;
   }
 
@@ -59,7 +63,7 @@ export class MyElement extends LitElement {
       <div class='container'>
         <div class='grid'>
           ${this.gridArray.map((item) => html`
-            <div class='box ${this.snakeArray.indexOf(item) !== -1 ? 'snake':''}'></div>
+            <div class='box ${this.snakeArray.indexOf(item) !== -1 ? 'snake':''} ${item === this.appleCoordinates ? 'apple' : ''}'></div>
           `)}
         </div>
         <div class='arrows'>
@@ -76,27 +80,32 @@ export class MyElement extends LitElement {
     return {
       gridArray: {type: Array},
       snakeArray: {type: Array},
+      appleCoordinates: {type: String}
     };
   }
 
   static rowLength = 20;
-  static snakeLength = 5;
+  //static snakeLength = 5;
   static startPositionColumn = 0;
 
   constructor() {
     super();
-    this.lastMove = 'right'
+    this.snakeLength = 5;
+    this.lastMove = 'right';
     this.gridArray = [];
     this.fillGrid();
     this.snakeArray = [];
     this.fillSnake();
-    this.headCoordinates = {row: MyElement.snakeLength - 1, column: 0};
+    this.headCoordinates = {row: this.snakeLength - 1, column: 0};
+    this.appleCount = 0;
+    this.appleCoordinates = '';
+    this.generateApple();   
     //eventListener
     //math.random
   }
 
   fillSnake() {
-    for (let i = 0; i < MyElement.snakeLength; i++) {
+    for (let i = 0; i < this.snakeLength; i++) {
       this.snakeArray.push( i +":"+ 0);
     }
   }
@@ -115,6 +124,7 @@ export class MyElement extends LitElement {
 
   moveRight() {
     if(this.lastMove !== 'left') {
+      this.lastMove = 'right';
       this.move(1, 0)
       setTimeout(() => {
         if (this.lastMove === 'right') this.moveRight()
@@ -131,6 +141,7 @@ export class MyElement extends LitElement {
       }, 1000)
     }
   }
+
   moveTop() {
     if(this.lastMove !== 'bottom'){
       this.lastMove = 'top';
@@ -153,14 +164,15 @@ export class MyElement extends LitElement {
   }
 
   move(additionalRow, additionalColumn) {
-    this.headCoordinates.row += additionalRow
-    this.headCoordinates.column += additionalColumn
+    this.headCoordinates.row += additionalRow;
+    this.headCoordinates.column += additionalColumn;
     this.checkBorders();
+    this.checkSelf();
     if(!this.lastMove) return;
     this.snakeArray.splice(0,1);
-    this.snakeArray.push(this.headCoordinates.row +':'+ this.headCoordinates.column)
+    this.snakeArray.push(this.headCoordinates.row +':'+ this.headCoordinates.column);
     this.snakeArray = [...this.snakeArray];
-
+    this.checkApple();
   }
 
   checkBorders() {
@@ -170,12 +182,58 @@ export class MyElement extends LitElement {
       this.headCoordinates.row < 0 ||
       this.headCoordinates.column < 0
     ){
-      this.lastMove = '';
+      this.gameOver();
+    }
+  }
+
+  checkSelf(){
+     let head = `${this.headCoordinates.row}:${this.headCoordinates.column}`;
+     let copySnake = this.snakeArray.slice(0,-1);
+     if(copySnake.indexOf(head)!==-1) this.gameOver();
+  }
+
+  checkApple(){
+    // აქ მარტო snakeHead-ზე შემოწმება შეიძლება
+    if(this.snakeArray.indexOf(this.appleCoordinates) !== -1) {
+      this.eatApple();
+    }
+  }
+
+  generateApple(){
+    while(true){
+      let appleX = this.getRandomInt(MyElement.rowLength);
+      let appleY = this.getRandomInt(MyElement.rowLength);
+      let apple = `${appleX}:${appleY}`;
+      //console.log(apple)
+      if(this.snakeArray.indexOf(apple) === -1){
+        this.appleCoordinates = apple;     
+        break;
+      }
     }
   }
 
   eatApple(){
+    this.appleCount+=1;
+    this.checkAppleCount();
+    this.generateApple();
     
+  }
+
+  checkAppleCount(){
+    if(this.appleCount===2){
+      this.snakeArray.push(this.appleCoordinates);
+      this.snakeArray = [...this.snakeArray];
+      this.appleCount = 0;
+    }
+  }
+
+  gameOver(){
+    this.lastMove = '';
+    alert('Game Over');
+  }
+
+  getRandomInt(max) {
+    return Math.floor(Math.random() * max);
   }
 
 }

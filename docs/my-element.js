@@ -90,6 +90,7 @@ export class MyElement extends LitElement {
 
   constructor() {
     super();
+    //this.addEventListener('click',e=>this.arrowMove(e))
     this.snakeLength = 5;
     this.lastMove = 'right';
     this.gridArray = [];
@@ -99,9 +100,33 @@ export class MyElement extends LitElement {
     this.headCoordinates = {row: this.snakeLength - 1, column: 0};
     this.appleCount = 0;
     this.appleCoordinates = '';
-    this.generateApple();   
+    this.generateApple();
+    this.arrowMove();
     //eventListener
     //math.random
+  }
+
+  arrowMove(){
+    document.addEventListener('keydown',e=>this.switchKey(e));
+  }
+
+  switchKey(event) {
+    switch (event.key) {
+      case "ArrowLeft":
+          this.moveLeft();
+          break;
+      case "ArrowRight":
+          this.moveRight();
+          break;
+      case "ArrowUp":
+          this.moveTop();
+          break;
+      case "ArrowDown":
+          this.moveBottom();
+          break;
+      default: 
+        break;
+  }
   }
 
   fillSnake() {
